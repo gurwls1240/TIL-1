@@ -7,16 +7,23 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Article, Comment, Hashtag
 from django.http import JsonResponse, HttpResponseBadRequest
 from .forms import ArticleForm, CommentForm
+from django.core.paginator import Paginator
 
 # Create your views here.
 def index(request):
-    if request.user.is_authenticated:
-        gravatar_url = hashlib.md5(request.user.email.encode('utf-8').lower().strip()).hexdigest()
-    else:
-        gravatar_url = None
-
-    articles = Article.objects.all()[::-1]
-    context =  {'articles': articles,'gravatar_url':gravatar_url,}
+    articles = Article.objects.all()
+    # 1. articles를 Paginator에 넣기
+    # Paginator(전체 리스트, 보여줄 갯수)
+    paginator = Paginator(articles,4)
+    
+    # 2. 사용자가 요청한 Page 가져오기
+    page = request.GET.get('page')
+    
+    # 3. 해당하는 page의 article만 가져오기
+    articles = paginator.get_page(page)
+    print(dir(articles))
+    print(dir(articles.paginator))
+    context = {'articles': articles}
     return render(request, 'articles/index.html', context)
 
 
